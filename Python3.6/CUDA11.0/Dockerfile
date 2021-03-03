@@ -31,7 +31,24 @@ ENV NVIDIA_VISIBLE_DEVICES all
 ENV NVIDIA_DRIVER_CAPABILITIES compute,utility
 ENV NVIDIA_REQUIRE_CUDA "cuda>=11.0 brand=tesla,driver>=418,driver<419 brand=tesla,driver>=440,driver<441 brand=tesla,driver>=450,driver<451"
 
-RUN apt-get update -y
+ENV NCCL_VERSION 2.8.4
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cuda-libraries-11-0=11.0.3-1 \
+    libnpp-11-0=11.1.0.245-1 \
+    cuda-nvtx-11-0=11.0.167-1 \
+    libcublas-11-0=11.2.0.252-1 \
+    libcusparse-11-0=11.1.1.245-1 \
+    libnccl2=$NCCL_VERSION-1+cuda11.0 \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN apt-mark hold libcublas-11-0 libnccl2
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libcudnn8=$CUDNN_VERSION-1+cuda11.0 \
+    && apt-mark hold libcudnn8 && \
+    rm -rf /var/lib/apt/lists/*
+
 RUN apt-get install -y ffmpeg libsm6 libxext6 ca-certificates
 RUN pip3 install --upgrade pip
 RUN pip3 install torch==1.7.1+cu110 -f https://download.pytorch.org/whl/torch_stable.html
